@@ -1,5 +1,7 @@
 # Sketchbook UI
 
+> Also in my skills collection: [rohitjz/skills](https://github.com/rohitjz/skills/tree/main/skills/design/sketchbook-ui) under `skills/design/`.
+
 Make any web page look drawn by hand, without losing a single exact number.
 
 Pencil-wobbly boxes, a highlighter on the number that matters, struck-through "before" values,
