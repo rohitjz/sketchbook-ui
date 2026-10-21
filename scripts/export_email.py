@@ -8,7 +8,7 @@ Chrome, crops to the paper sheet, and cuts it into N slices at blank gaps
 a browser, Cmd/Ctrl+A, copy, and paste into a new email.
 
 Usage:
-  python scripts/export_email.py examples/fieldnote-100k/newsletter.html --slices 4
+  python scripts/export_email.py examples/lets-encrypt-10-years/index.html --slices 4
 """
 import argparse, os, shutil, subprocess, sys, tempfile
 from PIL import Image

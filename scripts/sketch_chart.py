@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Draw a pencil-sketch dual-axis line chart (transparent PNG) from a CSV or XLSX.
+"""Draw a pencil-sketch line chart (optionally dual-axis) (transparent PNG) from a CSV or XLSX.
 
 Primary series: graphite line with hatched fill (left axis).
 Secondary series (optional): pencil-blue line (right axis, shown as %).
 
 Example:
-  python scripts/sketch_chart.py examples/fieldnote-100k/data.csv \
-      --date date --primary weekly_users --secondary share_of_base \
-      --primary-label "weekly users" --secondary-label "share of all users" \
-      --out examples/fieldnote-100k/chart.png
+  python scripts/sketch_chart.py examples/lets-encrypt-10-years/data.csv --date date \
+      --primary active_domains --every 3 \
+      --mark "2018-09-15|1M certs a day" --mark "2020-02-27|1 billionth cert" \
+      --out examples/lets-encrypt-10-years/chart.png
 """
 import argparse, csv, datetime as dt, os
 import matplotlib
@@ -59,6 +59,10 @@ def read_rows(path, date_col, cols):
 def compact(v):
     if v == 0:
         return "0"
+    if v >= 1e9:
+        return f"{v/1e9:.1f}".rstrip("0").rstrip(".") + "B"
+    if v >= 1e8:
+        return f"{v/1e6:.0f}M"
     if v >= 1e6:
         return f"{v/1e6:.2f}".rstrip("0").rstrip(".") + "M"
     if v >= 1e3:
@@ -74,17 +78,38 @@ def main():
     a.add_argument("--secondary")
     a.add_argument("--primary-label", default="")
     a.add_argument("--secondary-label", default="")
-    a.add_argument("--secondary-is-ratio", action="store_true", default=True,
-                   help="secondary values are 0-1 ratios; shown as %%")
+    a.add_argument("--secondary-format", choices=["ratio", "pct", "count"], default="ratio",
+                   help="ratio: 0-1 shown as %%; pct: already a percent; count: compact K/M/B")
+    a.add_argument("--smooth", type=int, default=1, help="rolling mean window in rows (e.g. 7)")
+    a.add_argument("--every", type=int, default=1, help="keep every Nth row after smoothing")
+    a.add_argument("--mark", action="append", default=[],
+                   help='callout on the primary line: "YYYY-MM-DD|label" (repeatable)')
     a.add_argument("--font", help="path to a handwriting .ttf")
     a.add_argument("--out", required=True)
     a.add_argument("--size", default="8.6x4.6", help="inches WxH")
     o = a.parse_args()
 
     rows = read_rows(o.data, o.date, [o.primary, o.secondary])
+    def roll(v):
+        if o.smooth <= 1:
+            return v
+        out = []
+        for i in range(len(v)):
+            win = [x for x in v[max(0, i - o.smooth + 1):i + 1] if x is not None]
+            out.append(sum(win) / len(win) if win else None)
+        return out
+    rows = [r for r in rows if r[1] is not None]
     d = [r[0] for r in rows]
-    p = [r[1] for r in rows]
-    s = [r[2] * (100 if o.secondary_is_ratio else 1) for r in rows] if o.secondary else None
+    p = roll([r[1] for r in rows])
+    s = roll([r[2] * (100 if o.secondary_format == "ratio" else 1) for r in rows]) if o.secondary else None
+    keep = list(range(0, len(d), o.every))
+    if keep[-1] != len(d) - 1:
+        keep.append(len(d) - 1)
+    d = [d[i] for i in keep]; p = [p[i] for i in keep]
+    if s:
+        s = [s[i] for i in keep]
+    pct = o.secondary_format != "count"
+    sfmt = (lambda v: f"{v:.1f}%") if pct else compact
     W, H = (float(x) for x in o.size.split("x"))
     name = hand_font(o.font)
 
@@ -103,12 +128,24 @@ def main():
         ax.tick_params(labelsize=13, colors=GRAPHITE)
         span = (d[-1] - d[0]).days
         ax.set_xlim(d[0] - dt.timedelta(days=2), d[-1] + dt.timedelta(days=max(10, span // 5)))
-        ticks = [m for m in md.num2date(md.MonthLocator().tick_values(d[0], d[-1]))]
+        loc = md.YearLocator() if span > 900 else md.MonthLocator()
+        ax.xaxis.set_major_formatter(md.DateFormatter("%Y" if span > 900 else "%b"))
+        ticks = [m for m in md.num2date(loc.tick_values(d[0], d[-1]))]
         ax.set_xticks([m for m in ticks if d[0] <= m.replace(tzinfo=None) <= d[-1]])
-        ax.xaxis.set_major_formatter(md.DateFormatter("%b"))
         ax.scatter([d[0], d[-1]], [p[0], p[-1]], color=GRAPHITE, s=30, zorder=5)
-        ax.annotate(compact(p[0]), (d[0], p[0]), xytext=(8, -22), textcoords="offset points", color=GRAPHITE, fontsize=17)
+        if p[0] > top * .04:  # skip a start label that would sit on the x-axis
+            ax.annotate(compact(p[0]), (d[0], p[0]), xytext=(8, -22), textcoords="offset points", color=GRAPHITE, fontsize=17)
         ax.annotate(compact(p[-1]), (d[-1], p[-1]), xytext=(8, -14), textcoords="offset points", color=GRAPHITE, fontsize=19)
+        for k, m in enumerate(o.mark):
+            when, label = m.split("|", 1)
+            when = dt.datetime.fromisoformat(when)
+            i = min(range(len(d)), key=lambda j: abs((d[j] - when).days))
+            dy = top * (0.30 + 0.16 * (k % 3))
+            ax.annotate(label, xy=(d[i], p[i]), xytext=(d[i], min(top * .93, p[i] + dy)),
+                        ha="left" if i < len(d) * .12 else "right" if i > len(d) * .88 else "center", color=PENCIL, fontsize=15,
+                        arrowprops=dict(arrowstyle="->", color=PENCIL, lw=1.1, shrinkB=4,
+                                        connectionstyle="arc3,rad=.15"))
+            ax.scatter([d[i]], [p[i]], s=26, facecolor="white", edgecolor=PENCIL, linewidth=1.6, zorder=6)
         mid = int(len(d) * .55)
         if o.primary_label:
             ax.annotate(o.primary_label, xy=(d[mid], p[mid]), xytext=(d[int(len(d) * .5)], top * .12),
@@ -118,14 +155,14 @@ def main():
             ax2 = ax.twinx(); ax2.patch.set_alpha(0)
             ax2.plot(d, s, color=PENCIL, lw=1.8)
             ax2.set_ylim(0, max(s) * 1.16)
-            ax2.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.0f}%"))
+            ax2.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.0f}%" if pct else compact(v)))
             for k in ("top", "left", "bottom"):
                 ax2.spines[k].set_visible(False)
             ax2.spines["right"].set_color(PENCIL)
             ax2.tick_params(labelsize=13, colors=PENCIL)
             ax2.scatter([d[0], d[-1]], [s[0], s[-1]], color=PENCIL, s=24, zorder=5)
-            ax2.annotate(f"{s[0]:.1f}%", (d[0], s[0]), xytext=(6, -34), textcoords="offset points", color=PENCIL, fontsize=17)
-            ax2.annotate(f"{s[-1]:.1f}%", (d[-1], s[-1]), xytext=(8, 4), textcoords="offset points", color=PENCIL, fontsize=17)
+            ax2.annotate(sfmt(s[0]), (d[0], s[0]), xytext=(6, -34), textcoords="offset points", color=PENCIL, fontsize=17)
+            ax2.annotate(sfmt(s[-1]), (d[-1], s[-1]), xytext=(8, 4), textcoords="offset points", color=PENCIL, fontsize=17)
             if o.secondary_label:
                 q = int(len(d) * .25)
                 ax2.annotate(o.secondary_label, xy=(d[q], s[q]), xytext=(d[2], max(s) * 1.1),

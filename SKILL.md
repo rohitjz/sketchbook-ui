@@ -1,94 +1,98 @@
 ---
-name: sketchbook-newsletter
-description: Turn a milestone, launch or metrics update into a hand-drawn "sketchbook" HTML newsletter, with pencil-wobbly boxes, a highlighter-marked hero number, a strike-through "before" number, ink arrows, ticks, a taped-in pencil chart and a doodled "thank-you village". Exports email-safe PNG slices for Outlook or Gmail. Use when someone wants a celebration email, team newsletter, milestone announcement or exec update that feels hand-designed rather than templated, or asks for a "pencil sketch", "hand-drawn", "notebook" or "doodle" style.
+name: sketchbook-ui
+description: Design any web page, landing page, blog post, report, dashboard or newsletter in a hand-drawn "sketchbook" style, with pencil-wobbly boxes, a highlighter on the key number, struck-through "before" values, circled words, ink arrows, ticks, sticky notes, a taped-in xkcd-style chart, and doodled icons, while every fact stays exact. Includes a drop-in CSS and SVG kit, a chart script, and email-safe PNG export. Use when someone asks for a "hand-drawn", "pencil", "sketch", "notebook", "doodle", "off-beat" or "made by a designer, not a template" look, or wants a milestone, launch or celebration page or email that feels personal.
 license: MIT
 ---
 
-# Sketchbook Newsletter
+# Sketchbook UI
 
-A one-page newsletter that looks drawn by hand on paper. Every number is still exact. Templated
-dashboards get skimmed; a page that looks drawn for this one moment gets read.
+A design system that makes an HTML page look drawn by hand on paper, without losing precision.
+It works for any page: landing pages, blog posts, changelogs, reports, portfolios, event pages.
+**The marquee use is a milestone newsletter**, where warmth matters as much as the numbers.
 
 ## When to use
 
-- A milestone or celebration: "we crossed 1M users", a launch, a year in review.
-- A team-wide or leadership update where warmth matters as much as the numbers.
-- Any time the user says "hand-drawn", "pencil", "sketch", "notebook", "doodle" or "off-beat".
+- The user asks for hand-drawn, pencil, sketch, notebook, doodle, zine or "off-beat" styling.
+- A page should feel personal: a celebration, a launch, a team update, a story with numbers.
+- A redesign of an existing page or post that reads as generic.
 
-**Don't use it** for dense operational reporting, or for anything that needs live, searchable
-text in the email body. The look depends on web fonts and SVG, which email clients strip, so the
-reliable way to send it is as images (see *Sending*).
+**Don't use it** for dense data apps, forms-heavy flows, or anything that has to look official.
+For a formal exec audience, offer a clean typographic version with the same content as well.
 
 ## The kit
 
-Everything lives in `assets/template.html`: one CSS block and four reusable SVG symbols. Fill the
-`{{PLACEHOLDERS}}` and delete any sections you don't need.
+| File | What it is |
+|---|---|
+| `assets/sketchbook.css` | The whole look: paper, type, marks, boxes, components. Tokens in `:root`. |
+| `assets/symbols.html` | Paste once after `<body>`: the pencil filter plus reusable doodles (`arrow`, `tick`, `house`, `star`, `lock`, `big-arrow`, `strike`, `uline`, `circle`). |
+| `assets/page-skeleton.html` | Minimal starting page for any site. |
+| `assets/newsletter-template.html` | The marquee newsletter layout with `{{PLACEHOLDERS}}`. |
+| `scripts/sketch_chart.py` | CSV or XLSX to a pencil-style chart (transparent PNG), with milestone callouts. |
+| `scripts/export_email.py` | Renders a page and cuts it into PNG slices for Outlook or Gmail. |
+| `scripts/inline_assets.py` | Bundles CSS and images into one self-contained HTML file. |
+| `examples/kit/` | Every component on one page. Open it before designing. |
+| `examples/lets-encrypt-10-years/` | Marquee example: a public blog post redrawn as a sketchbook page. |
 
-| Device | How it is made | Use it for |
-|---|---|---|
-| Handwriting | Google Fonts **Caveat** (display) + **Kalam** (body), falling back to Bradley Hand and Segoe Print | All text |
-| Strike-through "before" | Two hand-drawn SVG strokes over the old number | Hero: what it used to be |
-| Highlighter | A skewed `linear-gradient` behind the bottom 42% of the text, with ragged ends | Hero: the new number. One per page |
-| Pencil boxes | `::before`/`::after` borders with irregular `border-radius`, run through an `feTurbulence` + `feDisplacementMap` SVG filter; the second outline is offset and faint, like a redrawn stroke | Headline metric, small cards |
-| Wavy underline | A cubic-Bézier SVG path under each `h2` | Section headings |
-| Ink arrow, tick, house | SVG `<symbol>`s reused with `<use href="#...">` | Lists, wins, the thank-you village |
-| Taped chart | White card rotated about 0.8°, two translucent "tape" strips, soft shadow | The one chart |
-| Pencil chart | `matplotlib` in `xkcd` mode, a handwriting font, hatched fill, arrow annotations, transparent PNG | The one chart |
-| Tilt | `rotate(-2deg…+2deg)` on kicker, notes and sign-off only | Life, used sparingly |
+### Components (classes in `sketchbook.css`)
 
-Palette: graphite `#3A3A38`, pencil blue `#2F5BB7`, highlighter yellow `rgb(255,222,74)`, paper
-`#FFFFFF`. A graph-paper variant is one `background-image` of two 1px linear gradients at 26px.
-White reads better for broad audiences.
+- **Paper:** `.sheet` (720px) or `.sheet.wide` (1040px); textures `.graph`, `.ruled`, `.margin`.
+- **Type:** `.hand` (Caveat), Kalam body, `.kicker` (tilted label), `.lede`, `.fine`; `h2` with `<svg class="uline"><use href="#uline"/></svg>`.
+- **Marks:** `.hl` highlighter, `.strike` with `#strike`, `.circled` with `#circle`, pencil-underline links, `.tag`.
+- **Hero:** `.was.strike` (old value) above `h1.now` with an `.hl` span (new value).
+- **Boxes:** `.sk` pencil box (`.sk.blue` for emphasis); `.grid` of `.sk.check` cards with `#tick`.
+- **Metric:** `.big` (from → to with `#big-arrow`), `.note`, `.sub` / `.sub.prime` rows.
+- **Figure:** `.taped` card with `.tape.l` / `.tape.r`, plus a `.caption`.
+- **Lists:** `.arrows` (with `#arrow`), `.timeline` (`li.key` for major moments).
+- **Interactive:** `.btn` / `.btn.ghost`, `.nav` (underlines on hover or `aria-current`), `.sticky`.
+- **Thanks:** `.village` of `.house` items, `.signoff`, `.sig`, `.foot`.
+
+## How the look is made
+
+- **Wobble:** pencil borders use an irregular `border-radius` and an SVG `feTurbulence` +
+  `feDisplacementMap` filter. A faint, offset second outline reads as a redrawn stroke.
+- **Highlighter:** a skewed gradient behind the bottom 42% of the text, with ragged ends.
+- **Doodles:** hand-drawn cubic Bézier paths in `<symbol>`s with round caps, reused through `<use>`.
+- **Chart:** `matplotlib` in `xkcd` mode, a handwriting font, hatched area, curved arrow callouts,
+  exported transparent and trimmed so it fills its taped card.
+- **Palette:** graphite `#3A3A38`, pencil blue `#2F5BB7`, correction red `#C8463C`, highlighter
+  `rgb(255,222,74)`, sticky `#FFF3A8`, tape beige.
+
+## Design rules
+
+1. **One highlighter per page.** It marks the single thing to remember.
+2. **Tilt sparingly.** Only kickers, notes, tags, captions and the sign-off, within ±2°. Body text stays straight.
+3. **Hand fonts for display, never for long text.** Kalam body text is fine for prose under about 600 words. For longer pages use a clean serif or sans for body text and keep Caveat for headings and marks.
+4. **Precision survives the style.** Exact numbers, real dates, cited sources. Never invent data.
+5. **Lead with meaning.** The hero is the number that measures the mission, not the vanity count.
+6. **Don't be snarky.** Report your share and your progress, not a rival's weakness.
+7. **Accessibility:** decorative SVGs get `aria-hidden="true"`, charts get a full `alt`, and links keep a visible focus ring (already in the CSS).
 
 ## Workflow
 
-1. **Get the story first.** Ask for: the headline number (before → after), 2–3 supporting
-   metrics, 2–4 quality metrics, what's next, and who to thank. Never invent numbers.
-2. **Draw the chart** if there is a time series:
+1. **Get the content first.** Collect the headline number (before → after), the supporting facts,
+   any time series, what's next, and who to thank. For a redesign, read the source and pull the
+   facts from it and from any public data it cites.
+2. **Pick a page:** `page-skeleton.html` for a general site, `newsletter-template.html` for an
+   update. Copy `sketchbook.css` next to it, or link to it.
+3. **Draw the chart** if there is a time series:
    ```bash
    pip install -r requirements.txt
-   python scripts/sketch_chart.py data.csv --date date --primary users \
-     --secondary share --primary-label "weekly users" --secondary-label "share of base" \
-     --out chart.png
+   python scripts/sketch_chart.py data.csv --date date --primary users --out chart.png
+   # options: --secondary col --secondary-format ratio|pct|count, --smooth 7, --every 3,
+   #          --mark "2020-02-27|1 billionth cert" (repeatable), --primary-label "..."
    ```
-   It reads CSV or XLSX, labels the start and end values in hand lettering, trims the
-   transparent margin, and treats the secondary series as a 0–1 ratio shown as %.
-3. **Fill the template.** Copy `assets/template.html` next to `chart.png` and replace the
-   placeholders. Section order (keep it unless told otherwise):
-   kicker → hero (strike + highlight) → lede → drivers → **headline box** (big number, sub-metrics,
-   taped chart) → **ticked quality cards** → **arrow list** of what's next → **village** →
-   sign-off → signature.
-4. **Look at it.** Render it and inspect the image, not just the code. Check:
-   - labels don't collide in the chart or the village (house labels wrap at 62px);
-   - nothing overflows at 390px wide;
-   - only one highlighter on the page.
-5. **Export for email** (below).
-
-## Writing rules
-
-- Lead with the number and what it means. One sentence of why, then the evidence.
-- Sub-metric format: **bold label with the delta**, then one plain sentence.
-- Never point out that you beat another team or product. Report your share, not their weakness.
-- Keep each list item to a few words, with no sub-text.
-- End with a forward-looking line ("On to 10 million.") and a real signature.
-
-## Sending
-
-Email clients drop web fonts, SVG filters and most CSS, so send the newsletter as images:
-
-```bash
-python scripts/export_email.py newsletter.html --slices 4
-```
-
-This renders at 2x in headless Chrome or Edge, crops to the paper, and cuts the page into slices
-**only at blank gaps**, never through text. It writes `email/part-N.png`, `email/full.png` and
-`email/paste-into-email.html`. Open that page in a browser, select all, copy, and paste into a new
-email. Send yourself a test and check it on a phone before sending wider.
-
-Trade-off to tell the user: recipients can't select or search image text. For a broad exec list
-that needs forwardable text, offer a clean typographic version with the same content instead.
+4. **Compose** from the components. Keep sections short: one idea per box.
+5. **Look at it.** Render at desktop and 390px wide and inspect the images. Check for label
+   collisions, overflow, and class clashes (for example `.big` is the metric; timelines use `li.key`).
+6. **Ship:**
+   - Web: `python scripts/inline_assets.py page.html -o page.single.html`.
+   - Email: `python scripts/export_email.py page.html --slices 4`, then open
+     `email/paste-into-email.html`, select all, copy, and paste into a new message. Email clients
+     strip web fonts and SVG filters, so images are the faithful way to send it. Recipients can't
+     select or search image text, so say so.
 
 ## Example
 
-`examples/fieldnote-100k/` is a complete public example for a fictional product, with synthetic
-data: `data.csv` → `chart.png` → `newsletter.html` → `email/`.
+`examples/lets-encrypt-10-years/` redraws the public post "10 Years of Let's Encrypt Certificates"
+(Dec 9, 2025). The chart is drawn from Let's Encrypt's public daily stats. It is an unofficial
+example, credited in the footer and not affiliated with Let's Encrypt or ISRG.
