@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>Fieldnote Search crosses 100K weekly users</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFFFFF; --grid:#DCE6F2; --graphite:#3A3A38; --soft:#64645F;
+    --pencil:#2F5BB7; --hl:255,222,74; --desk:#E4E7EA;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--desk);color:var(--graphite);
+    font-family:Kalam,"Bradley Hand","Noteworthy","Segoe Print",cursive;font-weight:400;
+    font-size:18px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .sheet{max-width:720px;margin:28px auto;padding:46px 54px 40px;position:relative;
+    background-color:var(--paper);
+    box-shadow:0 1px 0 #cfd4d9,0 18px 40px -22px rgba(40,50,60,.35)}
+  .hand{font-family:Caveat,"Bradley Hand",cursive;font-weight:700;line-height:1}
+  p{margin:0 0 14px;max-width:62ch}
+  b,strong{font-weight:700}
+
+  /* hero */
+  .kicker{font-size:28px;color:var(--soft);transform:rotate(-2deg);display:inline-block;margin-bottom:6px}
+  .was{position:relative;display:inline-block;font-size:62px;color:var(--soft);margin:8px 0 0 6px}
+  .was svg{position:absolute;left:-8px;top:18%;width:calc(100% + 16px);height:34px;overflow:visible}
+  .now{position:relative;display:block;font-size:clamp(84px,19vw,148px);margin:-6px 0 0 -4px;letter-spacing:-1px}
+  .now span{background:linear-gradient(100deg,rgba(var(--hl),0) 1%,rgba(var(--hl),.85) 3%,rgba(var(--hl),.6) 95%,rgba(var(--hl),0) 99%);
+    background-size:100% 42%;background-repeat:no-repeat;background-position:0 78%;padding:0 6px 0 2px;border-radius:40% 10% 35% 8%}
+  /* optional margin note: <div class="hand margin-note">text<svg>arrow</svg></div> */
+  .margin-note{position:absolute;right:-6px;top:28px;width:150px;font-size:24px;color:var(--pencil);transform:rotate(4deg);text-align:center}
+  .margin-note svg{display:block;margin:4px auto 0;width:70px;height:60px}
+  .lede{font-size:21px;font-weight:400;margin:6px 0 22px}
+  .fine{font-size:15px;color:var(--soft)}
+  h2 + p{margin-top:0}
+
+  h2{font-family:Caveat,"Bradley Hand",cursive;font-weight:700;font-size:44px;line-height:1;margin:44px 0 20px;position:relative;display:inline-block}
+  h2 svg{position:absolute;left:-4px;bottom:-12px;width:calc(100% + 10px);height:14px;overflow:visible}
+
+  /* sketched boxes */
+  .sk{position:relative;padding:22px 26px;margin:22px 0}
+  .sk::before,.sk::after{content:"";position:absolute;inset:0;border:2px solid var(--graphite);
+    border-radius:255px 14px 225px 14px/14px 225px 14px 255px;filter:url(#pencil);pointer-events:none}
+  .sk::after{inset:3px -2px -3px 2px;opacity:.35;border-width:1.5px;transform:rotate(.6deg)}
+
+  .growth{background:#FFFFFF}
+  .big{font-size:clamp(54px,11vw,84px);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .big .from{color:var(--soft);font-size:.62em}
+  .big svg{width:74px;height:34px;flex:none}
+  .growth .note{font-family:Caveat,cursive;font-weight:700;font-size:26px;color:var(--pencil);transform:rotate(-1.5deg);display:inline-block;margin:2px 0 14px}
+  .sub{display:flex;gap:18px;align-items:baseline;padding:12px 0;border-top:1.5px dashed rgba(58,58,56,.35);flex-wrap:wrap}
+  .sub .v{font-family:Caveat,cursive;font-weight:700;font-size:40px;white-space:nowrap}
+  .sub .v small{font-size:.65em;color:var(--soft)}
+  .sub.prime .v{font-size:48px}
+  .sub .t{flex:1;min-width:220px}
+
+  .checks{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .checks li{position:relative;margin:0;padding:14px 14px 14px 16px;background:#FFFFFF}
+  .checks .tick{width:34px;height:30px;display:block;margin-bottom:2px}
+  .checks .m{font-weight:700;font-size:17px;line-height:1.25}
+  .checks .v{font-family:Caveat,cursive;font-weight:700;font-size:40px;line-height:1.1;white-space:nowrap}
+  .checks .v small{font-size:.62em;color:var(--soft)}
+  .checks .d{font-family:Caveat,cursive;font-weight:700;font-size:23px;color:var(--pencil)}
+
+  .taped{position:relative;background:#fff;padding:18px 14px 10px;margin:26px 4px 8px;transform:rotate(-.8deg);
+    box-shadow:0 1px 2px rgba(0,0,0,.08),0 10px 24px -14px rgba(40,50,60,.45)}
+  .taped img{display:block;width:100%;height:auto}
+  .tape{position:absolute;width:110px;height:30px;background:rgba(236,226,196,.75);top:-14px;
+    box-shadow:0 1px 1px rgba(0,0,0,.06)}
+  .tape.l{left:18px;transform:rotate(-6deg)} .tape.r{right:18px;transform:rotate(5deg)}
+  .caption{font-family:Caveat,cursive;font-weight:700;font-size:22px;color:var(--soft);margin:8px 0 0 10px;transform:rotate(-.6deg)}
+
+  .next{list-style:none;padding:0;margin:14px 0 0}
+  .next li{display:flex;gap:12px;align-items:flex-start;margin:0 0 12px}
+  .next svg{flex:none;width:34px;height:22px;margin-top:4px}
+  .next b{font-weight:700}
+
+  .village{display:flex;flex-wrap:wrap;gap:8px 0;align-items:flex-end;margin:20px 0 22px}
+  .house{display:flex;flex-direction:column;align-items:center;width:76px}
+  .house svg{width:56px;height:58px}
+  .house span{font-family:Caveat,cursive;font-weight:700;font-size:19px;line-height:1.05;text-align:center;margin-top:2px;max-width:62px}
+  .signoff{font-family:Caveat,cursive;font-weight:700;font-size:34px;margin:16px 0 0;transform:rotate(-1.5deg);display:inline-block}
+  .sig{margin:30px 0 0;font-weight:400}
+  .foot{margin-top:34px;font-size:14px;color:var(--soft);border-top:1.5px dashed rgba(58,58,56,.3);padding-top:12px}
+
+  .ink{fill:none;stroke:var(--graphite);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .blue{fill:none;stroke:var(--pencil);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+  @media (max-width:640px){
+    body{font-size:17px}
+    .sheet{margin:0;padding:34px 22px 30px 22px}
+    .margin-note{position:static;transform:rotate(-2deg);width:auto;text-align:left;margin:4px 0 6px}
+    .margin-note svg{display:none}
+    .checks{grid-template-columns:1fr}
+    .house{width:72px}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="pencil"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>
+  <symbol id="house" viewBox="0 0 56 58"><path class="ink" d="M7 27 L28 6 L49 26 M11 24 L11 54 L46 55 L45 23 M23 55 L23 39 L33 39 L33 55 M15 31 h6 v6 h-6z"/></symbol>
+  <symbol id="arrow" viewBox="0 0 34 22"><path class="blue" d="M2 12 C 10 9, 20 13, 30 11 M23 4 L31 11 L23 18"/></symbol>
+  <symbol id="tick" viewBox="0 0 34 30"><path class="blue" d="M3 16 C 7 19, 10 23, 13 27 C 18 17, 25 8, 32 2" style="stroke-width:3"/></symbol>
+</svg>
+
+<main class="sheet">
+
+  <!-- 1. KICKER: who/when, tilted -->
+  <div class="hand kicker">Fieldnote Search, October 2026</div>
+
+  <!-- 2. HERO: old number struck through, new number highlighted -->
+  <div style="position:relative">
+    <div class="hand was">38,000
+      <svg viewBox="0 0 200 34" preserveAspectRatio="none" aria-hidden="true"><path class="ink" d="M2 20 C 50 12, 120 24, 198 10 M6 26 C 70 18, 140 22, 194 16" style="stroke-width:3"/></svg>
+    </div>
+    <h1 class="hand now"><span>100,000</span></h1>
+  </div>
+
+  <p class="lede">people now use Fieldnote Search every week. Six months ago it was 38,000.</p>
+  <p>Growth came from two levers: more people opening Fieldnote (about two thirds of the gain), and more of them choosing search once they got there. Search got better along the way: fewer dead-end queries, faster answers, and more people finding a note on the first try.</p>
+
+  <!-- 3. HEADLINE METRIC BOX with sub-metrics and taped chart -->
+  <h2>Gains in the last 6 months<svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path class="blue" d="M2 8 C 60 2, 120 12, 180 6 S 260 4, 298 9"/></svg></h2>
+  <section class="sk growth">
+    <div style="font-weight:700">Weekly search users</div>
+    <div class="hand big"><span class="from">38K</span>
+      <svg viewBox="0 0 74 34" aria-hidden="true"><path class="ink" d="M3 19 C 20 14, 45 22, 66 16 M54 6 L68 16 L55 27" style="stroke-width:2.6"/></svg>
+      <span>100K</span></div>
+    <div class="note">2.7x in six months</div>
+    <div class="sub prime">
+      <div class="v"><small>4.1% &rarr;</small> 6.0%</div>
+      <div class="t"><b>Share of all Fieldnote users, up 1.9 pts.</b> More of the people who open Fieldnote now search.</div>
+    </div>
+    <div class="sub">
+      <div class="v"><small>3K &rarr;</small> 14K</div>
+      <div class="t"><b>Mobile search users, 4.7x.</b> Mobile is now 14% of all search users.</div>
+    </div>
+    <figure class="taped" style="margin:26px -16px 6px;padding:18px 6px 8px">
+      <span class="tape l" aria-hidden="true"></span><span class="tape r" aria-hidden="true"></span>
+      <img src="chart.png" alt="Fieldnote Search weekly users rose from 38K in April to 102K at the end of September, while share of all Fieldnote users rose from 4.1% to 6.0%.">
+    </figure>
+    <div class="caption" style="margin-bottom:4px">Rolling 7-day users, daily. Illustrative data.</div>
+  </section>
+
+  <!-- 4. TICKED QUALITY CARDS -->
+  <p style="margin-top:26px"><b>And quality improved as we scaled.</b></p>
+  <ul class="checks">
+    <li class="sk"><svg class="tick" aria-hidden="true"><use href="#tick"/></svg>
+      <div class="m">No-result queries</div><div class="v"><small>18% &rarr;</small> 9%</div><div class="d">&minus;9 pts</div></li>
+    <li class="sk"><svg class="tick" aria-hidden="true"><use href="#tick"/></svg>
+      <div class="m">Found it on first try</div><div class="v"><small>52% &rarr;</small> 61%</div><div class="d">+9 pts</div></li>
+    <li class="sk"><svg class="tick" aria-hidden="true"><use href="#tick"/></svg>
+      <div class="m">Median time to answer</div><div class="v"><small>2.4s &rarr;</small> 1.1s</div><div class="d">&minus;54%</div></li></ul>
+
+  <!-- 5. ARROW LIST -->
+  <h2>This is just the beginning<svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path class="blue" d="M2 9 C 80 3, 150 12, 220 6 S 285 7, 298 8"/></svg></h2>
+  <p>Next, Fieldnote Search is expanding to:</p>
+  <ul class="next">
+    <li><svg aria-hidden="true"><use href="#arrow"/></svg><div><b>Shared team notebooks</b></div></li>
+    <li><svg aria-hidden="true"><use href="#arrow"/></svg><div><b>The desktop app</b></div></li>
+    <li><svg aria-hidden="true"><use href="#arrow"/></svg><div><b>Search across attachments and images</b></div></li>
+    <li><svg aria-hidden="true"><use href="#arrow"/></svg><div><b>Voice queries on mobile</b></div></li></ul>
+
+  <!-- 6. THANK-YOU VILLAGE -->
+  <h2>It took a village<svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path class="blue" d="M2 6 C 60 10, 150 3, 230 9 S 285 6, 298 7"/></svg></h2>
+  <div class="village" aria-hidden="true">
+    <div class="house" style="transform:rotate(-2deg)"><svg><use href="#house"/></svg><span>search</span></div>
+    <div class="house" style="transform:rotate(1.5deg) translateY(-4px)"><svg><use href="#house"/></svg><span>design</span></div>
+    <div class="house" style="transform:rotate(-1deg)"><svg><use href="#house"/></svg><span>research</span></div>
+    <div class="house" style="transform:rotate(2deg) translateY(-3px)"><svg><use href="#house"/></svg><span>data science</span></div>
+    <div class="house" style="transform:rotate(-1.5deg)"><svg><use href="#house"/></svg><span>platform</span></div>
+    <div class="house" style="transform:rotate(1deg) translateY(-5px)"><svg><use href="#house"/></svg><span>support</span></div>
+    <div class="house" style="transform:rotate(-2deg)"><svg><use href="#house"/></svg><span>marketing</span></div>
+    <div class="house" style="transform:rotate(1.5deg) translateY(-2px)"><svg><use href="#house"/></svg><span>&amp; many more</span></div></div>
+  <p>Congrats everyone. This is our win together across search, design, research, data science, platform, support, marketing, and everyone who sent us feedback along the way.</p>
+  <div class="signoff">On to 1 million.</div>
+  <p class="sig">Best regards,<br>The Fieldnote team</p>
+</main>
+</body>
+</html>
